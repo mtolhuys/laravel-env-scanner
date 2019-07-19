@@ -14,7 +14,9 @@ class EnvScan extends Command
      * @var string
      */
     protected $signature = '
-        env:scan { --t|table : Show results data in a table }
+        env:scan 
+            { --a|app : Include app folder }
+            { --t|table : Show results data in a table }
     ';
 
     private $scanner;
@@ -34,7 +36,9 @@ class EnvScan extends Command
      */
     public function handle()
     {
-        $this->scanner = new LaravelEnvScanner();
+        $this->scanner = new LaravelEnvScanner(
+            $this->option('app')
+        );
 
         $this->scanner->scan();
 

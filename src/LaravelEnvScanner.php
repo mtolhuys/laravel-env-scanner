@@ -2,6 +2,10 @@
 
 namespace Mtolhuys\LaravelEnvScanner;
 
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
+use RegexIterator;
+
 class LaravelEnvScanner
 {
     /**
@@ -10,8 +14,8 @@ class LaravelEnvScanner
      * @var array
      */
     public $results = [
-        'has_value' => 0,
         'empty' => 0,
+        'has_value' => 0,
         'depending_on_default' => 0,
         'data' => []
     ];
@@ -24,6 +28,19 @@ class LaravelEnvScanner
     private $currentFile;
 
     /**
+     * If true
+     * combine all config files with files in app folder
+     *
+     * @var bool
+     */
+    private $includeAppFolder;
+
+    public function __construct($includeAppFolder = false)
+    {
+        $this->includeAppFolder = $includeAppFolder;
+    }
+
+    /**
      * Execute the console command.
      *
      * @return mixed
@@ -31,9 +48,15 @@ class LaravelEnvScanner
      */
     public function scan()
     {
-        $configFiles = glob(config_path() . '/*.php');
+        $files = $this->recursiveGlob(config_path(),  '/.*?.php/');
 
-        foreach ($configFiles as $file) {
+        if ($this->includeAppFolder) {
+            $files = array_merge(
+                $this->recursiveGlob(app_path(), '/.*?.php/'), $files
+            );
+        }
+
+        foreach ($files as $file) {
             $values = array_filter(
                 preg_split(
                     "#[\n]+#", shell_exec("tr -d '\n' < $file | grep -oP 'env\(\K[^)]+'")
@@ -98,5 +121,23 @@ class LaravelEnvScanner
         }
 
         return $this->currentFile = $basename;
+    }
+
+    private function recursiveGlob(string $folder, string $pattern): array
+    {
+        $files = new RegexIterator(
+            new RecursiveIteratorIterator(
+                new RecursiveDirectoryIterator($folder)
+            ),
+            $pattern, RegexIterator::GET_MATCH
+        );
+
+        $list = [];
+
+        foreach($files as $file) {
+            $list = array_merge($list, $file);
+        }
+
+        return $list;
     }
 }
