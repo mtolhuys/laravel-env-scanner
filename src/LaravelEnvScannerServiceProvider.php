@@ -17,7 +17,7 @@ class LaravelEnvScannerServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             // Registering package commands.
              $this->commands([
-                 Commands\EnvCheck::class
+                 Commands\EnvScan::class
              ]);
         }
     }

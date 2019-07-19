@@ -5,7 +5,7 @@ namespace Mtolhuys\LaravelEnvScanner\Commands;
 use Illuminate\Console\Command;
 use Mtolhuys\LaravelEnvScanner\LaravelEnvScanner;
 
-class EnvCheck extends Command
+class EnvScan extends Command
 {
 
     /**
