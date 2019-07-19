@@ -1,13 +1,13 @@
 <?php
 
-namespace Mtolhuys\LaravelEnvChecker;
+namespace Mtolhuys\LaravelEnvScanner;
 
 use Illuminate\Support\Facades\Facade;
 
 /**
- * @see \Mtolhuys\LaravelEnvChecker\Skeleton\SkeletonClass
+ * @see \Mtolhuys\LaravelEnvScanner\Skeleton\SkeletonClass
  */
-class LaravelEnvCheckerFacade extends Facade
+class LaravelEnvScannerFacade extends Facade
 {
     /**
      * Get the registered name of the component.
@@ -16,6 +16,6 @@ class LaravelEnvCheckerFacade extends Facade
      */
     protected static function getFacadeAccessor()
     {
-        return 'laravel-env-checker';
+        return 'laravel-env-scanner';
     }
 }

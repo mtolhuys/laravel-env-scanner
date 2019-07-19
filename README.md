@@ -1,9 +1,9 @@
 # Very short description of the package
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/mtolhuys/laravel-env-checker.svg?style=flat-square)](https://packagist.org/packages/mtolhuys/laravel-env-checker)
-[![Build Status](https://img.shields.io/travis/mtolhuys/laravel-env-checker/master.svg?style=flat-square)](https://travis-ci.org/mtolhuys/laravel-env-checker)
-[![Quality Score](https://img.shields.io/scrutinizer/g/mtolhuys/laravel-env-checker.svg?style=flat-square)](https://scrutinizer-ci.com/g/mtolhuys/laravel-env-checker)
-[![Total Downloads](https://img.shields.io/packagist/dt/mtolhuys/laravel-env-checker.svg?style=flat-square)](https://packagist.org/packages/mtolhuys/laravel-env-checker)
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/mtolhuys/laravel-env-scanner.svg?style=flat-square)](https://packagist.org/packages/mtolhuys/laravel-env-scanner)
+[![Build Status](https://img.shields.io/travis/mtolhuys/laravel-env-scanner/master.svg?style=flat-square)](https://travis-ci.org/mtolhuys/laravel-env-scanner)
+[![Quality Score](https://img.shields.io/scrutinizer/g/mtolhuys/laravel-env-scanner.svg?style=flat-square)](https://scrutinizer-ci.com/g/mtolhuys/laravel-env-scanner)
+[![Total Downloads](https://img.shields.io/packagist/dt/mtolhuys/laravel-env-scanner.svg?style=flat-square)](https://packagist.org/packages/mtolhuys/laravel-env-scanner)
 
 This is where your description should go. Try and limit it to a paragraph or two, and maybe throw in a mention of what PSRs you support to avoid any confusion with users and contributors.
 
@@ -12,7 +12,7 @@ This is where your description should go. Try and limit it to a paragraph or two
 You can install the package via composer:
 
 ```bash
-composer require mtolhuys/laravel-env-checker
+composer require mtolhuys/laravel-env-scanner
 ```
 
 ## Usage

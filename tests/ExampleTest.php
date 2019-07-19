@@ -1,6 +1,6 @@
 <?php
 
-namespace Mtolhuys\LaravelEnvChecker\Tests;
+namespace Mtolhuys\LaravelEnvScanner\Tests;
 
 use PHPUnit\Framework\TestCase;
 

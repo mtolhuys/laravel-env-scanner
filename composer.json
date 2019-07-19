@@ -1,11 +1,11 @@
 {
-    "name": "mtolhuys/laravel-env-checker",
+    "name": "mtolhuys/laravel-env-scanner",
     "description": "Checks environmental variables used in the env() function",
     "keywords": [
         "mtolhuys",
-        "laravel-env-checker"
+        "laravel-env-scanner"
     ],
-    "homepage": "https://github.com/mtolhuys/laravel-env-checker",
+    "homepage": "https://github.com/mtolhuys/laravel-env-scanner",
     "license": "MIT",
     "type": "library",
     "authors": [
@@ -25,18 +25,17 @@
     },
     "autoload": {
         "psr-4": {
-            "Mtolhuys\\LaravelEnvChecker\\": "src"
+            "Mtolhuys\\LaravelEnvScanner\\": "src"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Mtolhuys\\LaravelEnvChecker\\Tests\\": "tests"
+            "Mtolhuys\\LaravelEnvScanner\\Tests\\": "tests"
         }
     },
     "scripts": {
         "test": "vendor/bin/phpunit",
         "test-coverage": "vendor/bin/phpunit --coverage-html coverage"
-
     },
     "config": {
         "sort-packages": true
@@ -44,10 +43,10 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Mtolhuys\\LaravelEnvChecker\\LaravelEnvCheckerServiceProvider"
+                "Mtolhuys\\LaravelEnvScanner\\LaravelEnvScannerServiceProvider"
             ],
             "aliases": {
-                "LaravelEnvChecker": "Mtolhuys\\LaravelEnvChecker\\LaravelEnvCheckerFacade"
+                "LaravelEnvScanner": "Mtolhuys\\LaravelEnvScanner\\LaravelEnvScannerFacade"
             }
         }
     }
