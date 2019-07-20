@@ -91,20 +91,25 @@ class LaravelEnvScanner
      */
     private function storeResult(string $file, $result)
     {
+        $resultData = [
+            'filename' => $this->getFilename($file),
+            'has_value' => '-',
+            'depending_on_default' => '-',
+            'empty' => '-',
+        ];
+
         if ($result->hasValue) {
+            $resultData['has_value'] = $result->envVar;
             $this->results['has_value']++;
         } else if ($result->hasDefault) {
+            $resultData['depending_on_default'] = $result->envVar;
             $this->results['depending_on_default']++;
         } else {
+            $resultData['empty'] = $result->envVar;
             $this->results['empty']++;
         }
 
-        $this->results['data'][] = [
-            'filename' => $this->getFilename($file),
-            'has_value' => $result->hasValue ? $result->envVar : '-',
-            'depending_on_default' => !$result->hasValue && $result->hasDefault ? $result->envVar : '-',
-            'empty' => !$result->hasValue && !$result->hasDefault ? $result->envVar : '-',
-        ];
+        $this->results['data'][] = $resultData;
     }
 
     private function getFilename(string $file)
