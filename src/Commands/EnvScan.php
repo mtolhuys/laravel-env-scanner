@@ -15,8 +15,7 @@ class EnvScan extends Command
      */
     protected $signature = '
         env:scan 
-            { --a|app : Include app folder }
-            { --t|table : Show results data in a table }
+            { --d|dir= : Specify directory to scan (defaults to your config folder) }
     ';
 
     private $scanner;
@@ -26,7 +25,7 @@ class EnvScan extends Command
      *
      * @var string
      */
-    protected $description = 'Check all environmental variables used in config folder';
+    protected $description = 'Check environmental variables used in your app';
 
     /**
      * Execute the console command.
@@ -37,27 +36,25 @@ class EnvScan extends Command
     public function handle()
     {
         $this->scanner = new LaravelEnvScanner(
-            $this->option('app')
+            $this->option('dir')
+        );
+
+        if (! file_exists($this->scanner->dir)) {
+            $this->error("{$this->scanner->dir} does not exist");
+            exit();
+        }
+
+        $this->output->write(
+            "<fg=green>Scanning:</fg=green> <fg=white>{$this->scanner->dir}...</fg=white>\n"
         );
 
         $this->scanner->scan();
 
-        $this->showResults();
-    }
-
-    private function showResults()
-    {
-        if ($this->option('table')) {
-            $this->table([
-                'File',
-                "Has value ({$this->scanner->results['has_value']})",
-                "Depending on default ({$this->scanner->results['depending_on_default']})",
-                "No value ({$this->scanner->results['empty']})",
-            ], $this->scanner->results['data']);
-        } else {
-            $this->info("{$this->scanner->results['has_value']} have a value");
-            $this->line("{$this->scanner->results['depending_on_default']} are depending on default");
-            $this->warn("{$this->scanner->results['empty']} have no value");
-        }
+        $this->table([
+            "Files ({$this->scanner->results['files']})",
+            "Has value ({$this->scanner->results['has_value']})",
+            "Depending on default ({$this->scanner->results['depending_on_default']})",
+            "No value ({$this->scanner->results['empty']})",
+        ], $this->scanner->results['data']);
     }
 }

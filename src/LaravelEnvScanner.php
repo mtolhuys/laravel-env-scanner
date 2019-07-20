@@ -14,6 +14,7 @@ class LaravelEnvScanner
      * @var array
      */
     public $results = [
+        'files' => 0,
         'empty' => 0,
         'has_value' => 0,
         'depending_on_default' => 0,
@@ -28,16 +29,16 @@ class LaravelEnvScanner
     private $currentFile;
 
     /**
-     * If true
-     * combine all config files with files in app folder
+     * Root directory to start recursive search for env()'s from
+     * Defaults to config_path()
      *
-     * @var bool
+     * @var string $dir
      */
-    private $includeAppFolder;
+    public $dir;
 
-    public function __construct($includeAppFolder = false)
+    public function __construct(string $dir = null)
     {
-        $this->includeAppFolder = $includeAppFolder;
+        $this->dir = $dir ?? config_path();
     }
 
     /**
@@ -48,19 +49,11 @@ class LaravelEnvScanner
      */
     public function scan()
     {
-        $files = $this->recursiveGlob(config_path(),  '/.*?.php/');
-
-        if ($this->includeAppFolder) {
-            $files = array_merge(
-                $this->recursiveGlob(app_path(), '/.*?.php/'), $files
-            );
-        }
+        $files = $this->recursiveDirSearch($this->dir,  '/.*?.php/');
 
         foreach ($files as $file) {
             $values = array_filter(
-                preg_split(
-                    "#[\n]+#", shell_exec("tr -d '\n' < $file | grep -oP 'env\(\K[^)]+'")
-                )
+                preg_split("#[\n]+#", shell_exec("tr -d '\n' < $file | grep -oP 'env\(\K[^)]+'"))
             );
 
             foreach ($values as $value) {
@@ -71,6 +64,8 @@ class LaravelEnvScanner
                 $this->storeResult($file, $result);
             }
         }
+
+        return $this;
     }
 
     /**
@@ -105,10 +100,10 @@ class LaravelEnvScanner
         }
 
         $this->results['data'][] = [
-            'File' => $this->getFilename($file),
-            'Has value' => $result->hasValue ? $result->envVar : '-',
-            'Depending on default' => !$result->hasValue && $result->hasDefault ? $result->envVar : '-',
-            'No value' => !$result->hasValue && !$result->hasDefault ? $result->envVar : '-',
+            'filename' => $this->getFilename($file),
+            'has_value' => $result->hasValue ? $result->envVar : '-',
+            'depending_on_default' => !$result->hasValue && $result->hasDefault ? $result->envVar : '-',
+            'empty' => !$result->hasValue && !$result->hasDefault ? $result->envVar : '-',
         ];
     }
 
@@ -117,14 +112,20 @@ class LaravelEnvScanner
         $basename = basename($file);
 
         if ($this->currentFile === $basename) {
-            return '';
+            return '-';
         }
+
+        $this->results['files']++;
 
         return $this->currentFile = $basename;
     }
 
-    private function recursiveGlob(string $folder, string $pattern): array
+    private function recursiveDirSearch(string $folder, string $pattern): array
     {
+        if (! file_exists($folder)) {
+            return [];
+        }
+
         $files = new RegexIterator(
             new RecursiveIteratorIterator(
                 new RecursiveDirectoryIterator($folder)
