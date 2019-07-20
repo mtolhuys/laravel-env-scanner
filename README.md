@@ -68,6 +68,7 @@ $this->scanner->results;
       "has_value" => "DB_HOST"
       "depending_on_default" => "-"
       "empty" => "-"
+    ]
 ]
 ```
 
