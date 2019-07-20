@@ -69,6 +69,7 @@ $this->scanner->results;
       "depending_on_default" => "-"
       "empty" => "-"
     ]
+  ]
 ]
 ```
 
