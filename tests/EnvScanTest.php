@@ -18,6 +18,8 @@ class EnvScanTest extends TestCase
     {
         // Defined
         env('FILLED');
+        // Test if doubles are ignored
+        env('FILLED');
         env('NOT_FILLED');
         env('FILLED_WITH_FALSE');
 

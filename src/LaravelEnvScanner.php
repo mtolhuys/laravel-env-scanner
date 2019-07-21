@@ -18,7 +18,8 @@ class LaravelEnvScanner
         'defined' => 0,
         'undefined' => 0,
         'depending_on_default' => 0,
-        'data' => []
+        'processed' => [],
+        'data' => [],
     ];
 
     /**
@@ -64,6 +65,10 @@ class LaravelEnvScanner
                         explode(',', str_replace(["'", '"', ' '], '', $value))
                     );
 
+                    if (! $result) {
+                        continue;
+                    }
+
                     $this->storeResult($file, $result);
                 }
             }
@@ -76,12 +81,20 @@ class LaravelEnvScanner
      * Get result based on comma separated parsed env() parameters
      *
      * @param array $values
-     * @return object
+     * @return object|bool
      */
     private function getResult(array $values)
     {
+        $envVar = $values[0];
+
+        if (in_array($envVar, $this->results['processed'])) {
+            return false;
+        }
+
+        $this->results['processed'][] = $envVar;
+
         return (object)[
-            'envVar' => $values[0],
+            'envVar' => $envVar,
             'hasValue' => env($values[0]) !== null,
             'hasDefault' => isset($values[1]),
         ];
