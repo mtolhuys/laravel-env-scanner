@@ -52,16 +52,20 @@ class LaravelEnvScanner
         $files = $this->recursiveDirSearch($this->dir,  '/.*?.php/');
 
         foreach ($files as $file) {
-            $values = array_filter(
-                preg_split("#[\n]+#", shell_exec("tr -d '\n' < $file | grep -oP 'env\(\K[^)]+'"))
+            preg_match_all(
+                '#env\((.*?)\)#',
+                shell_exec("tr -d '\n' < $file"),
+                $values
             );
 
-            foreach ($values as $value) {
-                $result = $this->getResult(
-                    explode(',', str_replace(["'", '"', ' '], '', $value))
-                );
+            if (is_array($values)) {
+                foreach ($values[1] as $value) {
+                    $result = $this->getResult(
+                        explode(',', str_replace(["'", '"', ' '], '', $value))
+                    );
 
-                $this->storeResult($file, $result);
+                    $this->storeResult($file, $result);
+                }
             }
         }
 
