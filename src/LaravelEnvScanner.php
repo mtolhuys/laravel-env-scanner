@@ -15,8 +15,8 @@ class LaravelEnvScanner
      */
     public $results = [
         'files' => 0,
-        'empty' => 0,
-        'has_value' => 0,
+        'defined' => 0,
+        'undefined' => 0,
         'depending_on_default' => 0,
         'data' => []
     ];
@@ -53,7 +53,7 @@ class LaravelEnvScanner
 
         foreach ($files as $file) {
             preg_match_all(
-                '#env\((.*?)\)#',
+                '# env\((.*?)\)#',
                 str_replace(["\n", "\r"], '', file_get_contents($file)),
                 $values
             );
@@ -82,7 +82,7 @@ class LaravelEnvScanner
     {
         return (object)[
             'envVar' => $values[0],
-            'hasValue' => (bool)env($values[0]),
+            'hasValue' => env($values[0]) !== null,
             'hasDefault' => isset($values[1]),
         ];
     }
@@ -97,20 +97,20 @@ class LaravelEnvScanner
     {
         $resultData = [
             'filename' => $this->getFilename($file),
-            'has_value' => '-',
+            'defined' => '-',
             'depending_on_default' => '-',
-            'empty' => '-',
+            'undefined' => '-',
         ];
 
         if ($result->hasValue) {
-            $resultData['has_value'] = $result->envVar;
-            $this->results['has_value']++;
+            $resultData['defined'] = $result->envVar;
+            $this->results['defined']++;
         } else if ($result->hasDefault) {
             $resultData['depending_on_default'] = $result->envVar;
             $this->results['depending_on_default']++;
         } else {
-            $resultData['empty'] = $result->envVar;
-            $this->results['empty']++;
+            $resultData['undefined'] = $result->envVar;
+            $this->results['undefined']++;
         }
 
         $this->results['data'][] = $resultData;

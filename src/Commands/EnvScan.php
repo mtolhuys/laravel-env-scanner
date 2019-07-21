@@ -52,9 +52,9 @@ class EnvScan extends Command
 
         $this->table([
             "Files ({$this->scanner->results['files']})",
-            "Has value ({$this->scanner->results['has_value']})",
+            "Defined ({$this->scanner->results['defined']})",
             "Depending on default ({$this->scanner->results['depending_on_default']})",
-            "No value ({$this->scanner->results['empty']})",
+            "Undefined ({$this->scanner->results['undefined']})",
         ], $this->scanner->results['data']);
     }
 }
