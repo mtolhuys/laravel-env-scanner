@@ -40,7 +40,7 @@ You can call the artisan command to start the scan:
 php artisan env:scan
 ```
 
-Optionally you could specify a directory to run from:
+Optionally you could specify a directory to run from (defaults to `config_path()`):
 
 ```bash
 php artisan env:scan -d app/Http/Controllers
@@ -76,10 +76,7 @@ $this->scanner->results;
   "files" => 1
   "defined" => 1
   "undefined" => 0
-  "depending_on_default" => 0
-  "processed" => [
-    0 => "DB_HOST"
-  ],
+  "depending_on_default" => 0,
   "data" => [
     0 => [
       "filename" => "database.php"
