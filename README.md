@@ -13,7 +13,7 @@ Example output of the command:
 $ php artisan env:scan         
 Scanning: laravel-app/config...
 +--------------+----------------+---------------------------+-------------------+
-| Files (1)    | Has value (4)  | Depending on default (1)  | No value (2)      |
+| Files (1)    | Defined (4)    | Depending on default (1)  | Undefined (2)     |
 +--------------+----------------+---------------------------+-------------------+
 | database.php | DB_CONNECTION  | -                         | -                 |
 | -            | -              | -                         | DATABASE_URL      |
@@ -74,15 +74,18 @@ $this->scanner->results;
 // Example results
 [
   "files" => 1
-  "empty" => 0
-  "has_value" => 1
+  "defined" => 1
+  "undefined" => 0
   "depending_on_default" => 0
+  "processed" => [
+    0 => "DB_HOST"
+  ],
   "data" => [
     0 => [
       "filename" => "database.php"
-      "has_value" => "DB_HOST"
+      "defined" => "DB_HOST"
       "depending_on_default" => "-"
-      "empty" => "-"
+      "undefined" => "-"
     ]
   ]
 ]
