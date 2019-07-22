@@ -26,20 +26,25 @@ class EnvScanTest extends TestCase
      * @param string $dir
      * @throws \Exception
      */
-    private function scanning_for_env(string $dir = null) {
+    private function scanning_for_env(string $dir = null)
+    {
         $this->scanner = (new LaravelEnvScanner($dir))->scan();
 
         // Defined
         env('FILLED');
+        getenv('GET_FILLED');
+
         // Test if doubles are ignored
         env('FILLED');
         env('NOT_FILLED');
         env('FILLED_WITH_FALSE');
 
         env('DEPENDING_ON_DEFAULT', 'default');
+        getenv('GET_DEPENDING_ON_DEFAULT', 'default');
         env('DEFAULT_IS_FALSE', false);
 
         env('UNDEFINED');
+        getenv('GET_UNDEFINED');
     }
 
     /** @test
@@ -50,31 +55,36 @@ class EnvScanTest extends TestCase
         $this->scanning_for_env(__DIR__);
 
         $this->assertTrue($this->scanner->results['files'] === 1);
-        $this->assertTrue($this->scanner->results['defined'] === 3);
-        $this->assertTrue($this->scanner->results['depending_on_default'] === 2);
-        $this->assertTrue($this->scanner->results['undefined'] === 1);
+        $this->assertTrue($this->scanner->results['defined'] === 4);
+        $this->assertTrue($this->scanner->results['depending_on_default'] === 3);
+        $this->assertTrue($this->scanner->results['undefined'] === 2);
         $this->assertTrue($this->scanner->results['data'][0]['filename'] === basename(__FILE__));
 
         foreach ($this->scanner->results['data'] as $result) {
             if ($result['defined'] !== '-') {
                 $this->assertTrue($result['depending_on_default'] === '-');
                 $this->assertTrue($result['undefined'] === '-');
-                $this->assertTrue(
-                    $result['defined'] === 'FILLED'
-                    || $result['defined'] === 'NOT_FILLED'
-                    || $result['defined'] === 'FILLED_WITH_FALSE'
-                );
+                $this->assertTrue(in_array($result['defined'], [
+                    'FILLED',
+                    'GET_FILLED',
+                    'NOT_FILLED',
+                    'FILLED_WITH_FALSE'
+                ]));
             } else if ($result['depending_on_default'] !== '-') {
                 $this->assertTrue($result['defined'] === '-');
                 $this->assertTrue($result['undefined'] === '-');
-                $this->assertTrue(
-                    $result['depending_on_default'] === 'DEPENDING_ON_DEFAULT'
-                    || $result['depending_on_default'] === 'DEFAULT_IS_FALSE'
-                );
+                $this->assertTrue(in_array($result['depending_on_default'], [
+                    'DEPENDING_ON_DEFAULT',
+                    'GET_DEPENDING_ON_DEFAULT',
+                    'DEFAULT_IS_FALSE',
+                ]));
             } else if ($result['undefined'] !== '-') {
                 $this->assertTrue($result['depending_on_default'] === '-');
                 $this->assertTrue($result['defined'] === '-');
-                $this->assertTrue($result['undefined'] === 'UNDEFINED');
+                $this->assertTrue(in_array($result['undefined'], [
+                    'UNDEFINED',
+                    'GET_UNDEFINED',
+                ]));
             }
         }
     }
@@ -82,9 +92,10 @@ class EnvScanTest extends TestCase
     /** @test */
     public function it_checks_if_command_output_is_correct_with_undefined_only_option()
     {
-        $expectedOutput = 'Scanning: '.__DIR__.'...'.PHP_EOL
-            .'1 used environmental variables are undefined:'.PHP_EOL
-            .'UNDEFINED'.PHP_EOL;
+        $expectedOutput = 'Scanning: ' . __DIR__ . '...' . PHP_EOL
+            . '2 used environmental variables are undefined:' . PHP_EOL
+            . 'UNDEFINED' . PHP_EOL
+            . 'GET_UNDEFINED' . PHP_EOL;
 
         Artisan::call('env:scan', [
             '--dir' => __DIR__,
