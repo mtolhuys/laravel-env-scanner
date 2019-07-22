@@ -44,9 +44,24 @@ Optionally you could specify a directory to run from:
 
 ```bash
 php artisan env:scan -d app/Http/Controllers
+Scanning: app/Http/Controllers...
 ```
 
-Additionally you can use the `LaravelEnvScanner` from anywhere you want:
+Or only look for undefined variables:
+
+```bash
+php artisan env:scan -u
+Scanning: laravel-app/config...
+2 used environmental variables are undefined:
+DB_HOST
+DB_PORT
+
+php artisan env:scan -u -d app
+Scanning: app...
+Looking good!
+```
+
+Aside from the command you can use the `LaravelEnvScanner` from anywhere you want:
 ```php
 (new LaravelEnvScanner(__DIR__))->scan()->results;
 
@@ -100,7 +115,3 @@ If you discover any security related issues, please email mtolhuys@protonmail.co
 ## License
 
 The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
-
-## Laravel Package Boilerplate
-
-This package was generated using the [Laravel Package Boilerplate](https://laravelpackageboilerplate.com).

@@ -18,9 +18,22 @@ class LaravelEnvScanner
         'defined' => 0,
         'undefined' => 0,
         'depending_on_default' => 0,
-        'processed' => [],
         'data' => [],
     ];
+
+    /**
+     * Stores processed var names
+     *
+     * @var array
+     */
+    private $processed = [];
+
+    /**
+     * Stores undefined var names
+     *
+     * @var array
+     */
+    public $undefined = [];
 
     /**
      * Current file being processed
@@ -87,11 +100,11 @@ class LaravelEnvScanner
     {
         $envVar = $values[0];
 
-        if (in_array($envVar, $this->results['processed'])) {
+        if (in_array($envVar, $this->processed)) {
             return false;
         }
 
-        $this->results['processed'][] = $envVar;
+        $this->processed[] = $envVar;
 
         return (object)[
             'envVar' => $envVar,
@@ -122,7 +135,7 @@ class LaravelEnvScanner
             $resultData['depending_on_default'] = $result->envVar;
             $this->results['depending_on_default']++;
         } else {
-            $resultData['undefined'] = $result->envVar;
+            $resultData['undefined'] = $this->undefined[] = $result->envVar;
             $this->results['undefined']++;
         }
 

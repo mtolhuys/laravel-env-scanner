@@ -16,6 +16,7 @@ class EnvScan extends Command
     protected $signature = '
         env:scan 
             { --d|dir= : Specify directory to scan (defaults to your config folder) }
+            { --u|undefined-only : Only show undefined variables as output }
     ';
 
     private $scanner;
@@ -50,11 +51,26 @@ class EnvScan extends Command
 
         $this->scanner->scan();
 
-        $this->table([
-            "Files ({$this->scanner->results['files']})",
-            "Defined ({$this->scanner->results['defined']})",
-            "Depending on default ({$this->scanner->results['depending_on_default']})",
-            "Undefined ({$this->scanner->results['undefined']})",
-        ], $this->scanner->results['data']);
+        $this->showOutput();
+    }
+
+    private function showOutput() {
+        if ($this->option('undefined-only')) {
+            if ($this->scanner->results['undefined'] === 0) {
+                $this->info("Looking good!");
+            } else {
+                $this->output->write(
+                    "<fg=red>{$this->scanner->results['undefined']} used environmental variables are undefined:</fg=red>\n"
+                );
+                $this->output->write('<fg=red>'.implode(PHP_EOL, $this->scanner->undefined)."</fg=red>\n");
+            }
+        } else {
+            $this->table([
+                "Files ({$this->scanner->results['files']})",
+                "Defined ({$this->scanner->results['defined']})",
+                "Depending on default ({$this->scanner->results['depending_on_default']})",
+                "Undefined ({$this->scanner->results['undefined']})",
+            ], $this->scanner->results['data']);
+        }
     }
 }
