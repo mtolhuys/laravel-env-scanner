@@ -90,12 +90,10 @@ class LaravelEnvScanner
             $invocations = $matches[0];
 
             foreach ($invocations as $index => $invocation) {
-                $params = empty($matches[1][$index]) ? $matches[2][$index] : $matches[1][$index];
-
-                $result = $this->getResult(
-                    $invocation,
-                    explode(',', str_replace(["'", '"', ' '], '', $params))
-                );
+                $result = $this->getResult($invocation, [
+                    $matches[1][$index],
+                    $matches[2][$index]
+                ]);
 
                 if (!$result) {
                     continue;
@@ -113,11 +111,15 @@ class LaravelEnvScanner
      * Validates by alphanumeric and underscore and skips already processed
      *
      * @param string $invocation
-     * @param array $params
+     * @param array $matches
      * @return object|bool
      */
-    private function getResult(string $invocation, array $params)
+    private function getResult(string $invocation, array $matches)
     {
+        $params = explode(',', str_replace(
+            ["'", '"', ' '], '', empty($matches[0]) ? $matches[1] : $matches[0]
+        ));
+
         $envVar = $params[0];
 
         if (in_array($envVar, $this->processed['vars'])) {
