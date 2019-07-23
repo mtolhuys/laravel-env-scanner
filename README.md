@@ -19,7 +19,6 @@ Scanning: laravel-app/config...
 | -            | -              | -                         | DATABASE_URL      |
 | -            | DB_DATABASE    | -                         | -                 |
 | -            | -              | DB_FOREIGN_KEYS           | -                 |
-| -            | -              | -                         | DATABASE_URL      |
 | -            | DB_HOST        | -                         | -                 |
 | -            | DB_PORT        | -                         | -                 |
 +--------------+----------------+---------------------------+-------------------+
