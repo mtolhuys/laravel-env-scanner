@@ -13,7 +13,7 @@ Example output of the command:
 $ php artisan env:scan         
 Scanning: laravel-app/config...
 +--------------+----------------+---------------------------+-------------------+
-| Files (1)    | Defined (4)    | Depending on default (1)  | Undefined (2)     |
+| Files (1)    | Defined (4)    | Depending on default (1)  | Undefined (1)     |
 +--------------+----------------+---------------------------+-------------------+
 | database.php | DB_CONNECTION  | -                         | -                 |
 | -            | -              | -                         | DATABASE_URL      |
