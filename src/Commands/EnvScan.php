@@ -61,7 +61,9 @@ class EnvScan extends Command
 
         if ($this->option('undefined-only')) {
             if ($this->scanner->results['undefined'] === 0) {
-                $this->info("Looking good!");
+                if (empty($this->scanner->warnings)) {
+                    $this->info("Looking good!");
+                }
             } else {
                 $this->line(
                     "<fg=red>{$this->scanner->results['undefined']} used environmental variables are undefined:</fg=red>"
