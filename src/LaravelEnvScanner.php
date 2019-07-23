@@ -87,9 +87,8 @@ class LaravelEnvScanner
             }
 
             $this->currentFile = $file;
-            $invocations = $matches[0];
 
-            foreach ($invocations as $index => $invocation) {
+            foreach ($matches[0] as $index => $invocation) {
                 $result = $this->getResult($invocation, [
                     $matches[1][$index],
                     $matches[2][$index]
