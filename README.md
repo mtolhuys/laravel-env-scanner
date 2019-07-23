@@ -61,7 +61,11 @@ Scanning: app...
 Warning: env("RISKY_".$behavior) found in app/Http/Middleware/Authenticate.php
 
 php artisan env:scan -u -d storage
+
+
+php artisan env:scan -u -d app
 Scanning: app...
+Warning: env("RISKY_".$behavior) found in app/Http/Middleware/Authenticate.php
 Looking good!
 ```
 
