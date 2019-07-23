@@ -77,7 +77,7 @@ $this->scanner->results;
   "defined" => 1
   "undefined" => 0
   "depending_on_default" => 0,
-  "data" => [
+  "columns" => [
     0 => [
       "filename" => "database.php"
       "defined" => "DB_HOST"
