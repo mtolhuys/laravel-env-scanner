@@ -1,6 +1,6 @@
 {
     "name": "mtolhuys/laravel-env-scanner",
-    "description": "Checks environmental variables used in the env() function",
+    "description": "Checks environmental variables used in the env() and getenv() helper functions",
     "keywords": [
         "mtolhuys",
         "laravel-env-scanner"
