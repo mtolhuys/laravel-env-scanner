@@ -29,6 +29,7 @@ class EnvScanTest extends TestCase
     private function scanning_for_env(string $dir = null)
     {
         $this->scanner = (new LaravelEnvScanner($dir))->scan();
+        $risky = 'USAGE';
 
         // Defined
         env('FILLED');
@@ -38,6 +39,8 @@ class EnvScanTest extends TestCase
         env('FILLED');
         env('NOT_FILLED');
         env('FILLED_WITH_FALSE');
+        env('POTENTIALLY_'.$risky);
+        getenv($risky);
 
         env('DEPENDING_ON_DEFAULT', 'default');
         getenv('GET_DEPENDING_ON_DEFAULT', 'default');
@@ -58,9 +61,9 @@ class EnvScanTest extends TestCase
         $this->assertTrue($this->scanner->results['defined'] === 4);
         $this->assertTrue($this->scanner->results['depending_on_default'] === 3);
         $this->assertTrue($this->scanner->results['undefined'] === 2);
-        $this->assertTrue($this->scanner->results['data'][0]['filename'] === basename(__FILE__));
+        $this->assertTrue($this->scanner->results['columns'][0]['filename'] === basename(__FILE__));
 
-        foreach ($this->scanner->results['data'] as $result) {
+        foreach ($this->scanner->results['columns'] as $result) {
             if ($result['defined'] !== '-') {
                 $this->assertTrue($result['depending_on_default'] === '-');
                 $this->assertTrue($result['undefined'] === '-');
@@ -92,7 +95,11 @@ class EnvScanTest extends TestCase
     /** @test */
     public function it_checks_if_command_output_is_correct_with_undefined_only_option()
     {
+        $safeEnv = 'env';
+        $safeGetEnv = 'getenv';
         $expectedOutput = 'Scanning: ' . __DIR__ . '...' . PHP_EOL
+            . "Warning: $safeEnv('POTENTIALLY_'.\$risky) found in ". __FILE__ . PHP_EOL
+            . "Warning: $safeGetEnv(\$risky) found in ". __FILE__ . PHP_EOL
             . '2 used environmental variables are undefined:' . PHP_EOL
             . 'UNDEFINED' . PHP_EOL
             . 'GET_UNDEFINED' . PHP_EOL;

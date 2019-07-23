@@ -18,15 +18,18 @@ class LaravelEnvScanner
         'defined' => 0,
         'undefined' => 0,
         'depending_on_default' => 0,
-        'data' => [],
+        'columns' => [],
     ];
 
     /**
-     * Stores processed var names
+     * Stores processed file and var names
      *
      * @var array
      */
-    private $processed = [];
+    private $processed = [
+        'files' => [],
+        'vars' => [],
+    ];
 
     /**
      * Stores undefined var names
@@ -34,6 +37,13 @@ class LaravelEnvScanner
      * @var array
      */
     public $undefined = [];
+
+    /**
+     * Stores warnings for vars not passing validation
+     *
+     * @var array
+     */
+    public $warnings = [];
 
     /**
      * Current file being processed
@@ -56,36 +66,42 @@ class LaravelEnvScanner
     }
 
     /**
-     * Execute the console command.
+     * Run the scan
      *
      * @return mixed
      * @throws \Exception
      */
     public function scan()
     {
-        $files = $this->recursiveDirSearch($this->dir,  '/.*?.php/');
+        $files = $this->recursiveDirSearch($this->dir, '/.*?.php/');
 
         foreach ($files as $file) {
             preg_match_all(
                 '# env\((.*?)\)| getenv\((.*?)\)#',
                 str_replace(["\n", "\r"], '', file_get_contents($file)),
-                $values
+                $matches
             );
 
-            $values = array_filter(
-                array_merge($values[1], $values[2])
-            );
+            if (empty(array_filter($matches))) {
+                continue;
+            }
 
-            foreach ($values as $value) {
+            $this->currentFile = $file;
+            $invocations = $matches[0];
+
+            foreach ($invocations as $index => $invocation) {
+                $params = empty($matches[1][$index]) ? $matches[2][$index] : $matches[1][$index];
+
                 $result = $this->getResult(
-                    explode(',', str_replace(["'", '"', ' '], '', $value))
+                    $invocation,
+                    explode(',', str_replace(["'", '"', ' '], '', $params))
                 );
 
-                if (! $result) {
+                if (!$result) {
                     continue;
                 }
 
-                $this->storeResult($file, $result);
+                $this->storeResult($result);
             }
         }
 
@@ -93,38 +109,50 @@ class LaravelEnvScanner
     }
 
     /**
-     * Get result based on comma separated parsed env() parameters
+     * Get result based on comma separated parsed env() or getenv() parameters
+     * Validates by alphanumeric and underscore and skips already processed
      *
-     * @param array $values
+     * @param string $invocation
+     * @param array $params
      * @return object|bool
      */
-    private function getResult(array $values)
+    private function getResult(string $invocation, array $params)
     {
-        $envVar = $values[0];
+        $envVar = $params[0];
 
-        if (in_array($envVar, $this->processed)) {
+        if (in_array($envVar, $this->processed['vars'])) {
             return false;
         }
 
-        $this->processed[] = $envVar;
+        $this->processed['vars'][] = $envVar;
+
+        if (!preg_match('/^[A-Za-z0-9_]+$/', $envVar)) {
+            $invocation = str_replace(' ', '', $invocation);
+
+            $this->warnings[] = (object)[
+                'filename' => $this->currentFile,
+                'invocation' => $invocation,
+            ];
+
+            return false;
+        }
 
         return (object)[
             'envVar' => $envVar,
-            'hasValue' => env($values[0]) !== null,
-            'hasDefault' => isset($values[1]),
+            'hasValue' => env($envVar) !== null,
+            'hasDefault' => isset($params[1]),
         ];
     }
 
     /**
      * Store result and optional runtime output
      *
-     * @param string $file
      * @param $result
      */
-    private function storeResult(string $file, $result)
+    private function storeResult($result)
     {
         $resultData = [
-            'filename' => $this->getFilename($file),
+            'filename' => $this->getColumnFilename(),
             'defined' => '-',
             'depending_on_default' => '-',
             'undefined' => '-',
@@ -141,25 +169,31 @@ class LaravelEnvScanner
             $this->results['undefined']++;
         }
 
-        $this->results['data'][] = $resultData;
+        $this->results['columns'][] = $resultData;
+
+        if (!in_array($this->currentFile, $this->processed['files'])) {
+            $this->results['files']++;
+            $this->processed['files'][] = $this->currentFile;
+        }
     }
 
-    private function getFilename(string $file)
+    /**
+     * Return filename or '-' for table
+     *
+     * @return string
+     */
+    private function getColumnFilename(): string
     {
-        $basename = basename($file);
-
-        if ($this->currentFile === $basename) {
+        if (in_array($this->currentFile, $this->processed['files'])) {
             return '-';
         }
 
-        $this->results['files']++;
-
-        return $this->currentFile = $basename;
+        return basename($this->currentFile);
     }
 
     private function recursiveDirSearch(string $folder, string $pattern): array
     {
-        if (! file_exists($folder)) {
+        if (!file_exists($folder)) {
             return [];
         }
 
@@ -172,7 +206,7 @@ class LaravelEnvScanner
 
         $list = [];
 
-        foreach($files as $file) {
+        foreach ($files as $file) {
             $list = array_merge($list, $file);
         }
 
