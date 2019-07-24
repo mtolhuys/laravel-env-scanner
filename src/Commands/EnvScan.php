@@ -68,7 +68,8 @@ class EnvScan extends Command
                 $this->line(
                     "<fg=red>{$this->scanner->results['undefined']} used environmental variables are undefined:</fg=red>"
                 );
-                $this->line('<fg=red>'.implode(PHP_EOL, $this->scanner->undefined)."</fg=red>");
+
+                $this->line('<fg=red>'.implode(PHP_EOL, $this->undefined($this->scanner->undefined))."</fg=red>");
             }
         }
 
@@ -80,5 +81,16 @@ class EnvScan extends Command
                 "Undefined ({$this->scanner->results['undefined']})",
             ], $this->scanner->results['columns']);
         }
+    }
+
+    private function undefined(array $undefined): array
+    {
+        $list = [];
+
+        foreach ($undefined as $var) {
+            $list[] = "<fg=white>{$var->filename}:</fg=white> {$var->var}";
+        }
+
+        return $list;
     }
 }

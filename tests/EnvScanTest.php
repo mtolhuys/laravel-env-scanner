@@ -57,37 +57,37 @@ class EnvScanTest extends TestCase
     {
         $this->scanning_for_env(__DIR__);
 
-        $this->assertTrue($this->scanner->results['files'] === 1);
-        $this->assertTrue($this->scanner->results['defined'] === 4);
-        $this->assertTrue($this->scanner->results['depending_on_default'] === 3);
-        $this->assertTrue($this->scanner->results['undefined'] === 2);
-        $this->assertTrue($this->scanner->results['columns'][0]['filename'] === basename(__FILE__));
+        $this->assertSame($this->scanner->results['files'], 1);
+        $this->assertSame($this->scanner->results['defined'], 4);
+        $this->assertSame($this->scanner->results['depending_on_default'], 3);
+        $this->assertSame($this->scanner->results['undefined'], 2);
+        $this->assertSame($this->scanner->results['columns'][0]['filename'], basename(__FILE__));
 
         foreach ($this->scanner->results['columns'] as $result) {
             if ($result['defined'] !== '-') {
                 $this->assertTrue($result['depending_on_default'] === '-');
                 $this->assertTrue($result['undefined'] === '-');
-                $this->assertTrue(in_array($result['defined'], [
+                $this->assertContains($result['defined'], [
                     'FILLED',
                     'GET_FILLED',
                     'NOT_FILLED',
                     'FILLED_WITH_FALSE'
-                ]));
+                ]);
             } else if ($result['depending_on_default'] !== '-') {
-                $this->assertTrue($result['defined'] === '-');
-                $this->assertTrue($result['undefined'] === '-');
-                $this->assertTrue(in_array($result['depending_on_default'], [
+                $this->assertSame($result['defined'], '-');
+                $this->assertSame($result['undefined'], '-');
+                $this->assertContains($result['depending_on_default'], [
                     'DEPENDING_ON_DEFAULT',
                     'GET_DEPENDING_ON_DEFAULT',
                     'DEFAULT_IS_FALSE',
-                ]));
+                ]);
             } else if ($result['undefined'] !== '-') {
-                $this->assertTrue($result['depending_on_default'] === '-');
-                $this->assertTrue($result['defined'] === '-');
-                $this->assertTrue(in_array($result['undefined'], [
+                $this->assertSame($result['depending_on_default'], '-');
+                $this->assertSame($result['defined'], '-');
+                $this->assertContains($result['undefined'], [
                     'UNDEFINED',
                     'GET_UNDEFINED',
-                ]));
+                ]);
             }
         }
     }
@@ -101,8 +101,8 @@ class EnvScanTest extends TestCase
             . "Warning: $safeEnv('POTENTIALLY_'.\$risky) found in ". __FILE__ . PHP_EOL
             . "Warning: $safeGetEnv(\$risky) found in ". __FILE__ . PHP_EOL
             . '2 used environmental variables are undefined:' . PHP_EOL
-            . 'UNDEFINED' . PHP_EOL
-            . 'GET_UNDEFINED' . PHP_EOL;
+            . __FILE__ . ': UNDEFINED' . PHP_EOL
+            . __FILE__ . ': GET_UNDEFINED' . PHP_EOL;
 
         Artisan::call('env:scan', [
             '--dir' => __DIR__,
