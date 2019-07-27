@@ -18,27 +18,6 @@ class EnvScanTest extends TestCase
         ];
     }
 
-    /** @test */
-    public function it_checks_if_command_output_is_correct_with_undefined_only_option()
-    {
-        $safeEnv = 'env';
-        $safeGetEnv = 'getenv';
-        $expectedOutput = 'Scanning: ' . __DIR__ . '...' . PHP_EOL
-            . "Warning: $safeEnv('POTENTIALLY_'.\$risky,'behavior') found in ". __FILE__ . ':107' . PHP_EOL
-            . "Warning: $safeGetEnv(\$risky) found in ". __FILE__ . ':111' . PHP_EOL
-            . '+---------------------------------------------------------------------+---------------+' . PHP_EOL
-            . '| '. __FILE__ .':117 | UNDEFINED     |' . PHP_EOL
-            . '| '. __FILE__ .':118 | GET_UNDEFINED |' . PHP_EOL
-            . '+---------------------------------------------------------------------+---------------+' . PHP_EOL;
-
-        Artisan::call('env:scan', [
-            '--dir' => __DIR__,
-            '--undefined-only' => 'true',
-        ]);
-
-        $this->assertSame($expectedOutput, Artisan::output());
-    }
-
     /** @test
      * @throws \Exception
      */
@@ -50,7 +29,7 @@ class EnvScanTest extends TestCase
         $this->assertSame($this->results['defined'], 4);
         $this->assertSame($this->results['depending_on_default'], 3);
         $this->assertSame($this->results['undefined'], 2);
-        $this->assertSame($this->results['columns'][0]['location'], __FILE__.':98');
+        $this->assertContains( __FILE__, $this->results['columns'][0]['location']);
 
         foreach ($this->results['columns'] as $result) {
             if ($result['defined'] !== '-') {
