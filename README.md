@@ -12,16 +12,12 @@ Example output of the command:
 ```bash
 $ php artisan env:scan         
 Scanning: laravel-app/config...
-+--------------+----------------+---------------------------+-------------------+
-| Files (1)    | Defined (4)    | Depending on default (1)  | Undefined (1)     |
-+--------------+----------------+---------------------------+-------------------+
-| database.php | DB_CONNECTION  | -                         | -                 |
-| -            | -              | -                         | DATABASE_URL      |
-| -            | DB_DATABASE    | -                         | -                 |
-| -            | -              | DB_FOREIGN_KEYS           | -                 |
-| -            | DB_HOST        | -                         | -                 |
-| -            | DB_PORT        | -                         | -                 |
-+--------------+----------------+---------------------------+-------------------+
++------------------------------------+----------------+---------------------------+-------------------+
+| Locations (2)                      | Defined (1)    | Depending on default (1)  | Undefined (0)     |
++------------------------------------+----------------+---------------------------+-------------------+
+| laravel-app/config/database.php:36 | DB_CONNECTION  | -                         | -                 |
+| laravel-app/config/database.php:42 | -              | DB_HOST                   | -                 |
++------------------------------------+----------------+---------------------------+-------------------+
 ```
 
 ## Installation
@@ -51,9 +47,10 @@ Or only look for undefined variables:
 ```bash
 php artisan env:scan -u
 Scanning: laravel-app/config...
-2 used environmental variables are undefined:
-DB_HOST
-DB_PORT
++-------------------------------+----------+
+| laravel-app/config/app.php:16 | APP_NAME |
+| laravel-app/config/app.php:29 | APP_ENV  |
++-------------------------------+----------+
 
 php artisan env:scan -u -d app
 Scanning: app...
@@ -76,13 +73,13 @@ $this->scanner->results;
 
 // Example results
 [
-  "files" => 1
+  "locations" => 1
   "defined" => 1
   "undefined" => 0
   "depending_on_default" => 0,
   "columns" => [
     0 => [
-      "filename" => "database.php"
+      "location" => "laravel-app/config/database.php:36"
       "defined" => "DB_HOST"
       "depending_on_default" => "-"
       "undefined" => "-"
