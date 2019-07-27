@@ -9,45 +9,34 @@ use Orchestra\Testbench\TestCase;
 
 class EnvScanTest extends TestCase
 {
-    private $scanner;
+    private $results;
 
-    public function getPackageProviders($app)
+    public function getPackageProviders($app): array
     {
         return [
             LaravelEnvScannerServiceProvider::class,
         ];
     }
 
-    /**
-     * This function is actually a hidden test on its own
-     * testing scanner results using pattern '# env\((.*?)\)#'
-     * therefore: '$test=null' should not be in the results
-     *
-     * @param string $dir
-     * @throws \Exception
-     */
-    private function scanning_for_env(string $dir = null)
+    /** @test */
+    public function it_checks_if_command_output_is_correct_with_undefined_only_option()
     {
-        $this->scanner = (new LaravelEnvScanner($dir))->scan();
-        $risky = 'USAGE';
+        $safeEnv = 'env';
+        $safeGetEnv = 'getenv';
+        $expectedOutput = 'Scanning: ' . __DIR__ . '...' . PHP_EOL
+            . "Warning: $safeEnv('POTENTIALLY_'.\$risky,'behavior') found in ". __FILE__ . ':107' . PHP_EOL
+            . "Warning: $safeGetEnv(\$risky) found in ". __FILE__ . ':111' . PHP_EOL
+            . '+---------------------------------------------------------------------+---------------+' . PHP_EOL
+            . '| '. __FILE__ .':117 | UNDEFINED     |' . PHP_EOL
+            . '| '. __FILE__ .':118 | GET_UNDEFINED |' . PHP_EOL
+            . '+---------------------------------------------------------------------+---------------+' . PHP_EOL;
 
-        // Defined
-        env('FILLED');
-        getenv('GET_FILLED');
+        Artisan::call('env:scan', [
+            '--dir' => __DIR__,
+            '--undefined-only' => 'true',
+        ]);
 
-        // Test if doubles are ignored
-        env('FILLED');
-        env('NOT_FILLED');
-        env('FILLED_WITH_FALSE');
-        env('POTENTIALLY_'.$risky);
-        getenv($risky);
-
-        env('DEPENDING_ON_DEFAULT', 'default');
-        getenv('GET_DEPENDING_ON_DEFAULT', 'default');
-        env('DEFAULT_IS_FALSE', false);
-
-        env('UNDEFINED');
-        getenv('GET_UNDEFINED');
+        $this->assertSame($expectedOutput, Artisan::output());
     }
 
     /** @test
@@ -57,16 +46,16 @@ class EnvScanTest extends TestCase
     {
         $this->scanning_for_env(__DIR__);
 
-        $this->assertSame($this->scanner->results['files'], 1);
-        $this->assertSame($this->scanner->results['defined'], 4);
-        $this->assertSame($this->scanner->results['depending_on_default'], 3);
-        $this->assertSame($this->scanner->results['undefined'], 2);
-        $this->assertSame($this->scanner->results['columns'][0]['filename'], basename(__FILE__));
+        $this->assertSame($this->results['locations'], 9);
+        $this->assertSame($this->results['defined'], 4);
+        $this->assertSame($this->results['depending_on_default'], 3);
+        $this->assertSame($this->results['undefined'], 2);
+        $this->assertSame($this->results['columns'][0]['location'], __FILE__.':98');
 
-        foreach ($this->scanner->results['columns'] as $result) {
+        foreach ($this->results['columns'] as $result) {
             if ($result['defined'] !== '-') {
-                $this->assertTrue($result['depending_on_default'] === '-');
-                $this->assertTrue($result['undefined'] === '-');
+                $this->assertSame($result['depending_on_default'], '-');
+                $this->assertSame($result['undefined'], '-');
                 $this->assertContains($result['defined'], [
                     'FILLED',
                     'GET_FILLED',
@@ -92,23 +81,40 @@ class EnvScanTest extends TestCase
         }
     }
 
-    /** @test */
-    public function it_checks_if_command_output_is_correct_with_undefined_only_option()
+    /**
+     * This function is actually a hidden test on its own
+     * testing scanner results using pattern '# env\((.*?)\)#'
+     * therefore: '$test=null' should not be in the results
+     *
+     * @param string $dir
+     * @throws \Exception
+     */
+    private function scanning_for_env(string $dir = null)
     {
-        $safeEnv = 'env';
-        $safeGetEnv = 'getenv';
-        $expectedOutput = 'Scanning: ' . __DIR__ . '...' . PHP_EOL
-            . "Warning: $safeEnv('POTENTIALLY_'.\$risky) found in ". __FILE__ . PHP_EOL
-            . "Warning: $safeGetEnv(\$risky) found in ". __FILE__ . PHP_EOL
-            . '2 used environmental variables are undefined:' . PHP_EOL
-            . __FILE__ . ': UNDEFINED' . PHP_EOL
-            . __FILE__ . ': GET_UNDEFINED' . PHP_EOL;
+        $this->results = (new LaravelEnvScanner($dir))->scan()->results;
+        $risky = 'USAGE';
 
-        Artisan::call('env:scan', [
-            '--dir' => __DIR__,
-            '--undefined-only' => 'true',
-        ]);
+        // Defined
+        env('FILLED');
+        getenv('GET_FILLED');
+        env('FILLED_WITH_FALSE');
+        env('NOT_FILLED');
 
-        $this->assertSame($expectedOutput, Artisan::output());
+        // Test if doubles are ignored
+        env('FILLED');
+
+        // Risky behavior is not tested
+        env(
+            'POTENTIALLY_'.$risky,
+            'behavior'
+        );
+        getenv($risky);
+
+        env('DEPENDING_ON_DEFAULT', 'default');
+        getenv('GET_DEPENDING_ON_DEFAULT', 'default');
+        env('DEFAULT_IS_FALSE', false);
+
+        env('UNDEFINED');
+        getenv('GET_UNDEFINED');
     }
 }

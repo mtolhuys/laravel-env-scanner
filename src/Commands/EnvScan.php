@@ -56,41 +56,24 @@ class EnvScan extends Command
 
     private function showOutput() {
         foreach ($this->scanner->warnings as $warning) {
-            $this->warn("Warning: <fg=red>{$warning->invocation}</fg=red> found in {$warning->filename}");
+            $this->warn("Warning: <fg=red>{$warning->invocation}</fg=red> found in {$warning->location}");
         }
 
         if ($this->option('undefined-only')) {
-            if ($this->scanner->results['undefined'] === 0) {
-                if (empty($this->scanner->warnings)) {
-                    $this->info("Looking good!");
-                }
-            } else {
-                $this->line(
-                    "<fg=red>{$this->scanner->results['undefined']} used environmental variables are undefined:</fg=red>"
-                );
-
-                $this->line('<fg=red>'.implode(PHP_EOL, $this->undefined($this->scanner->undefined))."</fg=red>");
+            if (empty($this->scanner->warnings) && $this->scanner->results['undefined'] === 0) {
+                $this->info('Looking good!');
             }
+
+            $this->table([], $this->scanner->undefined);
         }
 
         else {
             $this->table([
-                "Files ({$this->scanner->results['files']})",
+                "Locations ({$this->scanner->results['locations']})",
                 "Defined ({$this->scanner->results['defined']})",
                 "Depending on default ({$this->scanner->results['depending_on_default']})",
                 "Undefined ({$this->scanner->results['undefined']})",
             ], $this->scanner->results['columns']);
         }
-    }
-
-    private function undefined(array $undefined): array
-    {
-        $list = [];
-
-        foreach ($undefined as $var) {
-            $list[] = "<fg=white>{$var->filename}:</fg=white> {$var->var}";
-        }
-
-        return $list;
     }
 }

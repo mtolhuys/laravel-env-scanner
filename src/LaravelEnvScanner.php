@@ -14,7 +14,7 @@ class LaravelEnvScanner
      * @var array
      */
     public $results = [
-        'files' => 0,
+        'locations' => 0,
         'defined' => 0,
         'undefined' => 0,
         'depending_on_default' => 0,
@@ -27,8 +27,7 @@ class LaravelEnvScanner
      * @var array
      */
     private $processed = [
-        'files' => [],
-        'vars' => [],
+        'variables' => [],
     ];
 
     /**
@@ -50,7 +49,28 @@ class LaravelEnvScanner
      *
      * @var string
      */
-    private $currentFile;
+    private $file;
+
+    /**
+     * Current location a found invocation
+     *
+     * @var string
+     */
+    private $location;
+
+    /**
+     * Current invocation being processed
+     *
+     * @var string
+     */
+    private $invocation;
+
+    /**
+     * Current parameters being processed
+     *
+     * @var object
+     */
+    private $parameters;
 
     /**
      * Root directory to start recursive search for env()'s from
@@ -73,32 +93,20 @@ class LaravelEnvScanner
      */
     public function scan()
     {
-        $files = $this->recursiveDirSearch($this->dir, '/.*?.php/');
+        foreach ($this->getFiles() as $file) {
+            $lines = explode(PHP_EOL, file_get_contents($file));
 
-        foreach ($files as $file) {
-            preg_match_all(
-                '# env\((.*?)\)| getenv\((.*?)\)#',
-                str_replace(["\n", "\r"], '', file_get_contents($file)),
-                $matches
-            );
+            $this->file = $file;
 
-            if (empty(array_filter($matches))) {
-                continue;
-            }
+            foreach ($lines as $index => $line) {
 
-            $this->currentFile = $file;
+                if (preg_match('# env\(| getenv\(#', $line)) {
+                    if (! $this->setInvocationDetails($lines, $line, $index)) {
+                        continue;
+                    }
 
-            foreach ($matches[0] as $index => $invocation) {
-                $result = $this->getResult($invocation, [
-                    $matches[1][$index],
-                    $matches[2][$index]
-                ]);
-
-                if (!$result) {
-                    continue;
+                    $this->storeResult();
                 }
-
-                $this->storeResult($result);
             }
         }
 
@@ -106,118 +114,209 @@ class LaravelEnvScanner
     }
 
     /**
-     * Get result based on comma separated parsed env() or getenv() parameters
-     * Validates by alphanumeric and underscore and skips already processed
+     * Search for possible matches and make something usable out of it
      *
-     * @param string $invocation
-     * @param array $matches
-     * @return object|bool
+     * @param array $lines
+     * @param string $line
+     * @param int $index
+     * @return bool
      */
-    private function getResult(string $invocation, array $matches)
+    private function setInvocationDetails(array $lines, string $line, int $index): bool
     {
-        $params = explode(',', str_replace(
-            ["'", '"', ' '], '', empty($matches[0]) ? $matches[1] : $matches[0]
-        ));
+        $matches = $this->search($lines, $line, $index);
 
-        $envVar = $params[0];
-
-        if (in_array($envVar, $this->processed['vars'], true)) {
+        if (empty(array_filter($matches))) {
             return false;
         }
 
-        $this->processed['vars'][] = $envVar;
+        $this->setInvocation($matches);
+        $this->setParameters($matches);
+        $this->setLocation($index + 1);
 
-        if (!preg_match('/^\w+$/', $envVar)) {
-            $invocation = str_replace(' ', '', $invocation);
-
-            $this->warnings[] = (object)[
-                'filename' => $this->currentFile,
-                'invocation' => $invocation,
-            ];
-
+        if ($this->needsWarning()) {
             return false;
         }
 
-        return (object)[
-            'envVar' => $envVar,
-            'hasValue' => env($envVar) !== null,
-            'hasDefault' => isset($params[1]),
+        if ($this->alreadyProcessed()) {
+            return false;
+        }
+
+        $this->processed['variables'][] = $this->parameters->variable;
+
+        return true;
+    }
+
+    /**
+     * Search for single and multi-lined env and getenv invocations
+     *
+     * @param array $lines
+     * @param string $line
+     * @param int $number
+     * @return mixed
+     */
+    private function search(array $lines, string $line, int $number)
+    {
+        preg_match_all(
+            '# env\((.*?)\)| getenv\((.*?)\)#',
+            $line,
+            $matches
+        );
+
+        $line = str_replace(' ', '', $line);
+
+        if ($line === 'env(' || $line === 'getenv(') {
+            $matches = $this->searchMultiLine($lines, $number);
+        }
+
+        return $matches;
+    }
+
+    /**
+     * For multi-line invocation f.e.
+     * env(
+     *   'MULTI',
+     *   'lined'
+     * );
+     *
+     * @param array $lines
+     * @param int $number
+     * @return mixed
+     */
+    private function searchMultiLine(array $lines, int $number)
+    {
+        $search = $lines[$number];
+        $search .= $lines[$number + 1];
+        $search .= $lines[$number + 2];
+        $search .= $lines[$number + 3];
+
+        preg_match_all(
+            '# env\((.*?)\)| getenv\((.*?)\)#',
+            $search,
+            $matches
+        );
+
+        return $matches;
+    }
+
+    /**
+     * Set invocation based on first index in preg_match_all result
+     *
+     * @param array $matches
+     */
+    private function setInvocation(array $matches)
+    {
+        $this->invocation = str_replace(' ', '', str_replace(
+            ' ', '', $matches[0]
+        )[0]);
+    }
+
+    /**
+     * Sets parameters based on comma exploding
+     * 1 of last indexes in preg_match_all result
+     *
+     * @param array $matches
+     */
+    private function setParameters(array $matches)
+    {
+        $parameters = empty($matches[1][0]) ? $matches[2][0] : $matches[1][0];
+        $parameters = explode(',', str_replace(["'", '"', ' ',], '', $parameters));
+
+        $this->parameters = (object)[
+            'variable' => $parameters[0],
+            'default' => $parameters[1] ?? null,
         ];
     }
 
     /**
-     * Store result and optional runtime output
+     * Sets location as filename + linenumber
      *
-     * @param $result
+     * @param int $linenumber
      */
-    private function storeResult($result)
+    private function setLocation(int $linenumber)
+    {
+        $this->location = "{$this->file}:$linenumber";
+    }
+
+    /**
+     * Only warn about risky and unreadable invocations
+     *
+     * @return bool
+     */
+    private function needsWarning(): bool
+    {
+
+        if (!preg_match('/^\w+$/', $this->parameters->variable)) {
+            $this->warnings[] =  (object)[
+                'invocation' => $this->invocation,
+                'location' => $this->location,
+            ];
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * @return bool
+     */
+    private function alreadyProcessed(): bool
+    {
+        return in_array($this->parameters->variable, $this->processed['variables'], true);
+    }
+
+    /**
+     * Store result and optional runtime output
+     */
+    private function storeResult()
     {
         $resultData = [
-            'filename' => $this->getColumnFilename(),
+            'location' => $this->location,
             'defined' => '-',
             'depending_on_default' => '-',
             'undefined' => '-',
         ];
 
-        if ($result->hasValue) {
-            $resultData['defined'] = $result->envVar;
+        $this->results['locations']++;
+
+        if (env($this->parameters->variable) !== null) {
+            $resultData['defined'] = $this->parameters->variable;
             $this->results['defined']++;
-        } else if ($result->hasDefault) {
-            $resultData['depending_on_default'] = $result->envVar;
+        } else if ($this->parameters->default) {
+            $resultData['depending_on_default'] = $this->parameters->variable;
             $this->results['depending_on_default']++;
         } else {
+            $resultData['undefined'] = $this->parameters->variable;
             $this->results['undefined']++;
-            $this->undefined[] = (object)[
-                'filename' => $this->currentFile,
-                'var' => $result->envVar,
+            $this->undefined[] = [
+                'filename' => $this->location,
+                'variable' => $this->parameters->variable,
             ];
         }
 
         $this->results['columns'][] = $resultData;
-
-        if (!in_array($this->currentFile, $this->processed['files'], true)) {
-            $this->results['files']++;
-            $this->processed['files'][] = $this->currentFile;
-        }
     }
 
-    /**
-     * Return filename or '-' for table
-     *
-     * @return string
-     */
-    private function getColumnFilename(): string
+    private function getFiles(): array
     {
-        if (in_array($this->currentFile, $this->processed['files'], true)) {
-            return '-';
-        }
-
-        return basename($this->currentFile);
-    }
-
-    /**
-     * @param string $folder
-     * @param string $pattern
-     * @return array
-     */
-    private function recursiveDirSearch(string $folder, string $pattern): array
-    {
-        if (!file_exists($folder)) {
+        if (!file_exists($this->dir)) {
             return [];
         }
 
         $files = new RegexIterator(
             new RecursiveIteratorIterator(
-                new RecursiveDirectoryIterator($folder)
+                new RecursiveDirectoryIterator($this->dir)
             ),
-            $pattern, RegexIterator::GET_MATCH
+            '/.*?.php/', RegexIterator::GET_MATCH
         );
 
-        $list = [];
+        $list = [[]];
 
         foreach ($files as $file) {
-            $list = array_merge($list, $file);
+            $list[] = $file;
         }
+
+        $list = array_merge(...$list);
 
         return $list;
     }
