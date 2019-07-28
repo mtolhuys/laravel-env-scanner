@@ -59,21 +59,26 @@ class EnvScan extends Command
             $this->warn("Warning: <fg=red>{$warning->invocation}</fg=red> found in {$warning->location}");
         }
 
+        if (empty($this->scanner->warnings) && $this->scanner->results['undefined'] === 0) {
+            $this->info('Looking good!');
+
+            return;
+        }
+
         if ($this->option('undefined-only')) {
-            if (empty($this->scanner->warnings) && $this->scanner->results['undefined'] === 0) {
-                $this->info('Looking good!');
-            }
-
+            $this->warn(
+                "<fg=red>{$this->scanner->results['undefined']} undefined variables found in {$this->scanner->dir}/...</fg=red>"
+            );
             $this->table([], $this->scanner->undefined);
+
+            return;
         }
 
-        else {
-            $this->table([
-                "Locations ({$this->scanner->results['locations']})",
-                "Defined ({$this->scanner->results['defined']})",
-                "Depending on default ({$this->scanner->results['depending_on_default']})",
-                "Undefined ({$this->scanner->results['undefined']})",
-            ], $this->scanner->results['columns']);
-        }
+        $this->table([
+            "Locations ({$this->scanner->results['locations']})",
+            "Defined ({$this->scanner->results['defined']})",
+            "Depending on default ({$this->scanner->results['depending_on_default']})",
+            "Undefined ({$this->scanner->results['undefined']})",
+        ], $this->scanner->results['columns']);
     }
 }

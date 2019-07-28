@@ -18,6 +18,43 @@ class EnvScanTest extends TestCase
         ];
     }
 
+    /**
+     * This function is actually a hidden test on its own
+     * testing scanner results using pattern '# env\((.*?)\)#'
+     * therefore: '$test=null' should not be in the results
+     *
+     * @param string $dir
+     * @throws \Exception
+     */
+    private function scanning_for_env(string $dir = null)
+    {
+        $this->results = (new LaravelEnvScanner($dir))->scan()->results;
+        $risky = 'USAGE';
+
+        // Defined
+        env('FILLED');
+        getenv('GET_FILLED');
+        env('FILLED_WITH_FALSE');
+        env('NOT_FILLED');
+
+        // Test if doubles are ignored
+        env('FILLED');
+
+        // Risky behavior only shows up as warning
+        env(
+            'POTENTIALLY_'.$risky,
+            'behavior'
+        );
+        getenv($risky);
+
+        env('DEPENDING_ON_DEFAULT', 'default');
+        getenv('GET_DEPENDING_ON_DEFAULT', 'default');
+        env('DEFAULT_IS_FALSE', false);
+
+        env('UNDEFINED');
+        getenv('GET_UNDEFINED');
+    }
+
     /** @test
      * @throws \Exception
      */
@@ -60,40 +97,22 @@ class EnvScanTest extends TestCase
         }
     }
 
-    /**
-     * This function is actually a hidden test on its own
-     * testing scanner results using pattern '# env\((.*?)\)#'
-     * therefore: '$test=null' should not be in the results
-     *
-     * @param string $dir
-     * @throws \Exception
-     */
-    private function scanning_for_env(string $dir = null)
+    /** @test */
+    public function it_checks_if_command_output_is_correct_with_undefined_only_option()
     {
-        $this->results = (new LaravelEnvScanner($dir))->scan()->results;
-        $risky = 'USAGE';
+        Artisan::call('env:scan', [
+            '--dir' => __DIR__,
+            '--undefined-only' => 'true',
+        ]);
 
-        // Defined
-        env('FILLED');
-        getenv('GET_FILLED');
-        env('FILLED_WITH_FALSE');
-        env('NOT_FILLED');
+        $output = Artisan::output();
 
-        // Test if doubles are ignored
-        env('FILLED');
-
-        // Risky behavior is not tested
-        env(
-            'POTENTIALLY_'.$risky,
-            'behavior'
-        );
-        getenv($risky);
-
-        env('DEPENDING_ON_DEFAULT', 'default');
-        getenv('GET_DEPENDING_ON_DEFAULT', 'default');
-        env('DEFAULT_IS_FALSE', false);
-
-        env('UNDEFINED');
-        getenv('GET_UNDEFINED');
+        $this->assertContains('(\'POTENTIALLY_\'.$risky,\'behavior\') found in '. __FILE__, $output);
+        $this->assertContains('($risky) found in ' . __FILE__, $output);
+        $this->assertContains('2 undefined variables found in ' . __DIR__, $output);
+        $this->assertContains('UNDEFINED', $output);
+        $this->assertContains('GET_UNDEFINED', $output);
+        $this->assertNotContains('FILLED', $output);
+        $this->assertNotContains('DEPENDING_ON_DEFAULT', $output);
     }
 }
