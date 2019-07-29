@@ -82,7 +82,7 @@ class LaravelEnvScanner
 
     public function __construct(string $dir = null)
     {
-        $this->dir = $dir ?? config_path();
+        $this->dir = basename($dir ?? config_path());
     }
 
     /**
@@ -216,7 +216,7 @@ class LaravelEnvScanner
      *
      * @param array $matches
      */
-    private function setParameters(array $matches)
+    private function setParameters(array $matches): void
     {
         $parameters = empty($matches[1][0]) ? $matches[2][0] : $matches[1][0];
         $parameters = explode(',', str_replace(["'", '"', ' ',], '', $parameters));
@@ -232,7 +232,7 @@ class LaravelEnvScanner
      *
      * @param int $linenumber
      */
-    private function setLocation(int $linenumber)
+    private function setLocation(int $linenumber): void
     {
         $this->location = "{$this->file}:$linenumber";
     }
@@ -265,10 +265,7 @@ class LaravelEnvScanner
         return in_array($this->parameters->variable, $this->processed['variables'], true);
     }
 
-    /**
-     * Store result and optional runtime output
-     */
-    private function storeResult()
+    private function storeResult(): void
     {
         $resultData = [
             'location' => $this->location,
