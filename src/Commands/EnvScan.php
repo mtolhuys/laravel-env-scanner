@@ -59,13 +59,13 @@ class EnvScan extends Command
             $this->warn("Warning: <fg=red>{$warning->invocation}</fg=red> found in {$warning->location}");
         }
 
-        if (empty($this->scanner->warnings) && $this->scanner->results['undefined'] === 0) {
-            $this->info('Looking good!');
-
-            return;
-        }
-
         if ($this->option('undefined-only')) {
+            if (empty($this->scanner->warnings) && $this->scanner->results['undefined'] === 0) {
+                $this->info('Looking good!');
+
+                return;
+            }
+
             $this->warn(
                 "<fg=red>{$this->scanner->results['undefined']} undefined variables found in {$this->scanner->dir}/...</fg=red>"
             );
