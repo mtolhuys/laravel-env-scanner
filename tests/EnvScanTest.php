@@ -11,6 +11,8 @@ class EnvScanTest extends TestCase
 {
     private $results;
 
+    private $path;
+
     public function getPackageProviders($app): array
     {
         return [
@@ -29,6 +31,8 @@ class EnvScanTest extends TestCase
     private function scanning_for_env(string $dir = null)
     {
         $this->results = (new LaravelEnvScanner($dir))->scan()->results;
+        $this->path = basename(__DIR__).'/'.basename(__FILE__);
+
         $risky = 'USAGE';
 
         // Defined
@@ -66,9 +70,9 @@ class EnvScanTest extends TestCase
         $this->assertSame($this->results['defined'], 4);
         $this->assertSame($this->results['depending_on_default'], 3);
         $this->assertSame($this->results['undefined'], 2);
-        $this->assertContains( __FILE__, $this->results['columns'][0]['location']);
+        $this->assertContains( $this->path, $this->results['rows'][0]['location']);
 
-        foreach ($this->results['columns'] as $result) {
+        foreach ($this->results['rows'] as $result) {
             if ($result['defined'] !== '-') {
                 $this->assertSame($result['depending_on_default'], '-');
                 $this->assertSame($result['undefined'], '-');
@@ -102,14 +106,13 @@ class EnvScanTest extends TestCase
     {
         Artisan::call('env:scan', [
             '--dir' => __DIR__,
-            '--undefined-only' => 'true',
         ]);
 
         $output = Artisan::output();
 
-        $this->assertContains('(\'POTENTIALLY_\'.$risky,\'behavior\') found in '. __FILE__, $output);
-        $this->assertContains('($risky) found in ' . __FILE__, $output);
-        $this->assertContains('2 undefined variables found in ' . __DIR__, $output);
+        $this->assertContains('(\'POTENTIALLY_\'.$risky,\'behavior\') found in '. $this->path, $output);
+        $this->assertContains('($risky) found in ' . $this->path, $output);
+        $this->assertContains('2 undefined variable(s) found in ' . $this->path, $output);
         $this->assertContains('UNDEFINED', $output);
         $this->assertContains('GET_UNDEFINED', $output);
         $this->assertNotContains('FILLED', $output);

@@ -18,7 +18,7 @@ class LaravelEnvScanner
         'defined' => 0,
         'undefined' => 0,
         'depending_on_default' => 0,
-        'columns' => [],
+        'rows' => [],
     ];
 
     /**
@@ -82,7 +82,7 @@ class LaravelEnvScanner
 
     public function __construct(string $dir = null)
     {
-        $this->dir = $dir ?? config_path();
+        $this->dir = basename($dir ?? config_path());
     }
 
     /**
@@ -203,7 +203,7 @@ class LaravelEnvScanner
      *
      * @param array $matches
      */
-    private function setInvocation(array $matches)
+    private function setInvocation(array $matches): void
     {
         $this->invocation = str_replace(' ', '', str_replace(
             ' ', '', $matches[0]
@@ -216,7 +216,7 @@ class LaravelEnvScanner
      *
      * @param array $matches
      */
-    private function setParameters(array $matches)
+    private function setParameters(array $matches): void
     {
         $parameters = empty($matches[1][0]) ? $matches[2][0] : $matches[1][0];
         $parameters = explode(',', str_replace(["'", '"', ' ',], '', $parameters));
@@ -265,10 +265,7 @@ class LaravelEnvScanner
         return in_array($this->parameters->variable, $this->processed['variables'], true);
     }
 
-    /**
-     * Store result and optional runtime output
-     */
-    private function storeResult()
+    private function storeResult(): void
     {
         $resultData = [
             'location' => $this->location,
@@ -294,7 +291,7 @@ class LaravelEnvScanner
             ];
         }
 
-        $this->results['columns'][] = $resultData;
+        $this->results['rows'][] = $resultData;
     }
 
     private function getFiles(): array

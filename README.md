@@ -10,14 +10,13 @@ This package comes with a `LaravelEnvScanner` class and artisan command which yo
 Example output of the command:
 
 ```bash
-$ php artisan env:scan         
+php artisan env:scan
 Scanning: laravel-app/config...
-+------------------------------------+----------------+---------------------------+-------------------+
-| Locations (2)                      | Defined (1)    | Depending on default (1)  | Undefined (0)     |
-+------------------------------------+----------------+---------------------------+-------------------+
-| laravel-app/config/database.php:36 | DB_CONNECTION  | -                         | -                 |
-| laravel-app/config/database.php:42 | -              | DB_HOST                   | -                 |
-+------------------------------------+----------------+---------------------------+-------------------+
+2 undefined variable(s) found in laravel-app/config/...
++-------------------------------+----------+
+| laravel-app/config/app.php:16 | APP_NAME |
+| laravel-app/config/app.php:29 | APP_ENV  |
++-------------------------------+----------+
 ```
 
 ## Installation
@@ -42,21 +41,24 @@ php artisan env:scan -d app/Http/Controllers
 Scanning: app/Http/Controllers...
 ```
 
-Or only look for undefined variables:
+Or show all used variables:
 
 ```bash
-php artisan env:scan -u
+php artisan env:scan -a
 Scanning: laravel-app/config...
-+-------------------------------+----------+
-| laravel-app/config/app.php:16 | APP_NAME |
-| laravel-app/config/app.php:29 | APP_ENV  |
-+-------------------------------+----------+
++------------------------------------+----------------+---------------------------+-------------------+
+| Locations (2)                      | Defined (1)    | Depending on default (1)  | Undefined (0)     |
++------------------------------------+----------------+---------------------------+-------------------+
+| laravel-app/config/database.php:36 | DB_CONNECTION  | -                         | -                 |
+| laravel-app/config/database.php:42 | -              | DB_HOST                   | -                 |
++------------------------------------+----------------+---------------------------+-------------------+ 
+ 
 
-php artisan env:scan -u -d app
+php artisan env:scan -d app
 Scanning: app...
 Warning: env("RISKY_".$behavior) found in app/Http/Middleware/Authenticate.php
-
-php artisan env:scan -u -d storage
+ 
+php artisan env:scan -d storage
 Scanning: storage...
 Looking good!
 ```

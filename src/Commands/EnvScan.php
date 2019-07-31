@@ -16,7 +16,7 @@ class EnvScan extends Command
     protected $signature = '
         env:scan 
             { --d|dir= : Specify directory to scan (defaults to your config folder) }
-            { --u|undefined-only : Only show undefined variables as output }
+            { --a|all : Show result containing all used variables }
     ';
 
     private $scanner;
@@ -46,7 +46,7 @@ class EnvScan extends Command
         }
 
         $this->output->write(
-            "<fg=green>Scanning:</fg=green> <fg=white>{$this->scanner->dir}...</fg=white>\n"
+            "<fg=green>Scanning:</fg=green> <fg=white>{$this->scanner->dir}/...</fg=white>\n"
         );
 
         $this->scanner->scan();
@@ -54,31 +54,38 @@ class EnvScan extends Command
         $this->showOutput();
     }
 
-    private function showOutput() {
+    private function showOutput(): void
+    {
         foreach ($this->scanner->warnings as $warning) {
             $this->warn("Warning: <fg=red>{$warning->invocation}</fg=red> found in {$warning->location}");
         }
 
-        if ($this->option('undefined-only')) {
-            if (empty($this->scanner->warnings) && $this->scanner->results['undefined'] === 0) {
-                $this->info('Looking good!');
+        if ($this->option('all')) {
+            if (empty($this->scanner->results['rows'])) {
+                $this->line('Nothing there...');
 
                 return;
             }
 
-            $this->warn(
-                "<fg=red>{$this->scanner->results['undefined']} undefined variables found in {$this->scanner->dir}/...</fg=red>"
-            );
-            $this->table([], $this->scanner->undefined);
+            $this->table([
+                "Locations ({$this->scanner->results['locations']})",
+                "Defined ({$this->scanner->results['defined']})",
+                "Depending on default ({$this->scanner->results['depending_on_default']})",
+                "Undefined ({$this->scanner->results['undefined']})",
+            ], $this->scanner->results['rows']);
 
             return;
         }
 
-        $this->table([
-            "Locations ({$this->scanner->results['locations']})",
-            "Defined ({$this->scanner->results['defined']})",
-            "Depending on default ({$this->scanner->results['depending_on_default']})",
-            "Undefined ({$this->scanner->results['undefined']})",
-        ], $this->scanner->results['columns']);
+        if (empty($this->scanner->warnings) && $this->scanner->results['undefined'] === 0) {
+            $this->info('Looking good!');
+
+            return;
+        }
+
+        $this->warn(
+            "<fg=red>{$this->scanner->results['undefined']} undefined variable(s) found in {$this->scanner->dir}/...</fg=red>"
+        );
+        $this->table([], $this->scanner->undefined);
     }
 }
