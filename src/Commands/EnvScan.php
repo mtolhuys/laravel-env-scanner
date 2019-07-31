@@ -51,22 +51,22 @@ class EnvScan extends Command
 
         $this->scanner->scan();
 
-        $this->showOutput();
-    }
-
-    private function showOutput(): void
-    {
         foreach ($this->scanner->warnings as $warning) {
             $this->warn("Warning: <fg=red>{$warning->invocation}</fg=red> found in {$warning->location}");
         }
 
+        if (empty($this->scanner->results['rows'])) {
+            $this->line('Nothing there...');
+
+            return;
+        }
+
+        $this->showResult();
+    }
+
+    private function showResult()
+    {
         if ($this->option('all')) {
-            if (empty($this->scanner->results['rows'])) {
-                $this->line('Nothing there...');
-
-                return;
-            }
-
             $this->table([
                 "Locations ({$this->scanner->results['locations']})",
                 "Defined ({$this->scanner->results['defined']})",

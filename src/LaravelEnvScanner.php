@@ -203,7 +203,7 @@ class LaravelEnvScanner
      *
      * @param array $matches
      */
-    private function setInvocation(array $matches): void
+    private function setInvocation(array $matches)
     {
         $this->invocation = str_replace(' ', '', str_replace(
             ' ', '', $matches[0]
@@ -216,7 +216,7 @@ class LaravelEnvScanner
      *
      * @param array $matches
      */
-    private function setParameters(array $matches): void
+    private function setParameters(array $matches)
     {
         $parameters = empty($matches[1][0]) ? $matches[2][0] : $matches[1][0];
         $parameters = explode(',', str_replace(["'", '"', ' ',], '', $parameters));
@@ -232,7 +232,7 @@ class LaravelEnvScanner
      *
      * @param int $linenumber
      */
-    private function setLocation(int $linenumber): void
+    private function setLocation(int $linenumber)
     {
         $this->location = "{$this->file}:$linenumber";
     }
@@ -265,7 +265,7 @@ class LaravelEnvScanner
         return in_array($this->parameters->variable, $this->processed['variables'], true);
     }
 
-    private function storeResult(): void
+    private function storeResult()
     {
         $resultData = [
             'location' => $this->location,
