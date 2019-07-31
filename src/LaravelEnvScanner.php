@@ -18,7 +18,7 @@ class LaravelEnvScanner
         'defined' => 0,
         'undefined' => 0,
         'depending_on_default' => 0,
-        'columns' => [],
+        'rows' => [],
     ];
 
     /**
@@ -203,7 +203,7 @@ class LaravelEnvScanner
      *
      * @param array $matches
      */
-    private function setInvocation(array $matches)
+    private function setInvocation(array $matches): void
     {
         $this->invocation = str_replace(' ', '', str_replace(
             ' ', '', $matches[0]
@@ -291,7 +291,7 @@ class LaravelEnvScanner
             ];
         }
 
-        $this->results['columns'][] = $resultData;
+        $this->results['rows'][] = $resultData;
     }
 
     private function getFiles(): array
